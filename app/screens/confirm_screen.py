@@ -91,7 +91,7 @@ class ConfirmScreen(QWidget):
         self.image_label.setPixmap(pixmap)
 
     def load_key_coords(self):
-        path = "assets/keys.json"
+        path = "app/assets/keys.json"
         if os.path.exists(path):
             with open(path, "r") as f:
                 try:

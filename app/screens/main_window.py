@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget
-from app.confirm_screen import ConfirmScreen
-from app.key_mapper_screen import KeyMapperScreen
-from app.result_screen import ResultScreen
+from app.screens.confirm_screen import ConfirmScreen
+from app.screens.key_mapper_screen import KeyMapperScreen
+from app.screens.result_screen import ResultScreen
 from app.theme import apply_theme
-from app.typing_test_screen import TypingTestScreen
-from app.config_manager import keys_exist
+from app.screens.typing_test_screen import TypingTestScreen
+from app.util.config_manager import keys_exist
 
 class MainWindow(QMainWindow):
     def __init__(self):

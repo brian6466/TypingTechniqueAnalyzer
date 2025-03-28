@@ -1,7 +1,7 @@
 import os
 import json
 
-CONFIG_PATH = "assets/keys.json"
+CONFIG_PATH = "app/assets/keys.json"
 
 def keys_exist():
     return os.path.exists(CONFIG_PATH) and os.path.getsize(CONFIG_PATH) > 0

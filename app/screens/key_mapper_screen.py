@@ -61,7 +61,7 @@ class KeyMapperScreen(QWidget):
 
     def save_coords(self):
         coords = self.image_label.key_coords
-        with open("assets/keys.json", "w") as f:
+        with open("app/assets/keys.json", "w") as f:
             json.dump(coords, f, indent=4)
         print("Saved key coordinates.")
         self.main_window.go_to_confirm_screen()
