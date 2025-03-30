@@ -19,12 +19,10 @@ class MainWindow(QMainWindow):
 
         self.confirm_screen = ConfirmScreen(self)
         self.key_mapper_screen = KeyMapperScreen(self)
-        self.typing_test_screen = TypingTestScreen(self)
         self.result_screen = ResultScreen(self)
 
         self.stack.addWidget(self.confirm_screen)     
         self.stack.addWidget(self.key_mapper_screen)
-        self.stack.addWidget(self.typing_test_screen)
         self.stack.addWidget(self.result_screen)
 
         if keys_exist():
@@ -42,6 +40,11 @@ class MainWindow(QMainWindow):
     def show_result_screen(self, wpm, accuracy):
         self.result_screen.update_results(wpm, accuracy)
         self.stack.setCurrentWidget(self.result_screen)
+
+    def go_to_typing_test_screen(self):
+        self.typing_test_screen = TypingTestScreen(self)
+        self.stack.addWidget(self.typing_test_screen)
+        self.stack.setCurrentWidget(self.typing_test_screen)
 
 
 

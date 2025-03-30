@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt, QTimer
 import random
 import html
 
+from app.screens.finger_tracking_screen import FingerTrackingScreen
 from app.theme import apply_theme
 
 
@@ -50,6 +51,10 @@ class TypingTestScreen(QWidget):
         self.layout.addWidget(self.text_label)
 
         self.reset_test()
+
+        self.finger_tracking_screen = FingerTrackingScreen()
+        self.finger_tracking_screen.show()
+
         apply_theme(self)
 
     def reset_test(self):
@@ -102,6 +107,14 @@ class TypingTestScreen(QWidget):
         else:
             char = event.text()
             if char.isalpha():
+                key_label = char.upper()
+
+                finger_used = self.finger_tracking_screen.get_finger_that_pressed_key(key_label)
+                if finger_used:
+                    print(f"Key '{key_label}' was pressed with: {finger_used}")
+                else:
+                    print(f"Error detected finding finger when '{key_label}' is pressed")
+
                 word = self.words[self.current_word_index]
                 idx = len(current)
 

@@ -106,7 +106,7 @@ class ConfirmScreen(QWidget):
 
     def go_to_typing_test(self):
         self.stop_camera()
-        self.main_window.stack.setCurrentWidget(self.main_window.typing_test_screen)
+        self.main_window.go_to_typing_test_screen()
 
     def go_to_key_mapper(self):
         self.stop_camera()
