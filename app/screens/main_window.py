@@ -4,7 +4,7 @@ from app.screens.key_mapper_screen import KeyMapperScreen
 from app.screens.result_screen import ResultScreen
 from app.theme import apply_theme
 from app.screens.typing_test_screen import TypingTestScreen
-from app.util.config_manager import keys_exist
+from app.util.config_manager import config_exists
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.key_mapper_screen)
         self.stack.addWidget(self.result_screen)
 
-        if keys_exist():
+        if config_exists("keys"):
             self.confirm_screen.start_camera_with_overlay()
             self.stack.setCurrentIndex(0)
         else:

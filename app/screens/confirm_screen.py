@@ -5,6 +5,8 @@ import cv2
 import json
 import os
 from app.theme import apply_theme
+from app.util.config_manager import load_config
+
 
 class ConfirmScreen(QWidget):
     def __init__(self, main_window):
@@ -91,18 +93,10 @@ class ConfirmScreen(QWidget):
         self.image_label.setPixmap(pixmap)
 
     def load_key_coords(self):
-        path = "app/assets/keys.json"
-        if os.path.exists(path):
-            with open(path, "r") as f:
-                try:
-                    data = json.load(f)
-                    print(f"Loaded {len(data)} key(s) from JSON.")
-                    return data
-                except Exception as e:
-                    print(f"Failed to load JSON: {e}")
-        else:
-            print("Key coordinates file not found.")
-        return {}
+        data = load_config("keys")
+        if data:
+            print(f"Loaded {len(data)} key(s) from JSON.")
+        return data
 
     def go_to_typing_test(self):
         self.stop_camera()

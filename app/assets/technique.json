@@ -1,0 +1,11 @@
+{
+    "Q": "Left Pinky", "W": "Left Ring", "E": "Left Middle", "R": "Left Index", "T": "Left Index",
+    "A": "Left Pinky", "S": "Left Ring", "D": "Left Middle", "F": "Left Index", "G": "Left Index",
+    "Z": "Left Pinky", "X": "Left Ring", "C": "Left Middle", "V": "Left Index", "B": "Left Index",
+    "Y": "Right Index", "U": "Right Index", "I": "Right Middle", "O": "Right Ring", "P": "Right Pinky",
+    "H": "Right Index", "J": "Right Index", "K": "Right Middle", "L": "Right Ring",
+    "N": "Right Index", "M": "Right Index",
+
+  " ": ["Right Thumb", "Left Thumb"]
+}
+

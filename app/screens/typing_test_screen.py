@@ -5,6 +5,7 @@ import html
 
 from app.screens.finger_tracking_screen import FingerTrackingScreen
 from app.theme import apply_theme
+from app.util.config_manager import load_config
 
 
 class TypingTestScreen(QWidget):
@@ -110,10 +111,25 @@ class TypingTestScreen(QWidget):
                 key_label = char.upper()
 
                 finger_used = self.finger_tracking_screen.get_finger_that_pressed_key(key_label)
+
+                if not hasattr(self, "technique_map"):
+                    self.correct_finger_map = load_config("technique") or {}
+
                 if finger_used:
-                    print(f"Key '{key_label}' was pressed with: {finger_used}")
+                    correct_finger = self.correct_finger_map.get(key_label)
+
+                    if correct_finger:
+                        if isinstance(correct_finger, list):
+                            is_correct = finger_used in correct_finger
+                        else:
+                            is_correct = finger_used == correct_finger
+
+                        result = "Correct" if is_correct else "Incorrect"
+                        print(f"[{result}] Key '{key_label}' - Used: {finger_used} | Expected: {correct_finger}")
+                    else:
+                        print(f"[Unknown] Key '{key_label}' - Used: {finger_used} | No mapping found.")
                 else:
-                    print(f"Error detected finding finger when '{key_label}' is pressed")
+                    print(f"[Error] Couldn't detect finger for key '{key_label}'")
 
                 word = self.words[self.current_word_index]
                 idx = len(current)
