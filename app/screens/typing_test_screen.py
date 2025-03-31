@@ -19,11 +19,12 @@ class TypingTestScreen(QWidget):
             "quick", "brown", "fox", "jump", "lazy", "day", "sun", "moon", "note", "play"
         ]
 
-        self.num_words = 40
+        self.num_words = 5
         self.words = []
         self.typed_words = []
         self.errors = []
         self.finished_words = []
+        self.finger_stats = {}
         self.current_word_index = 0
         self.timer = QTimer()
         self.elapsed = 0
@@ -130,6 +131,12 @@ class TypingTestScreen(QWidget):
                         print(f"[Unknown] Key '{key_label}' - Used: {finger_used} | No mapping found.")
                 else:
                     print(f"[Error] Couldn't detect finger for key '{key_label}'")
+
+                self.finger_stats.setdefault(key_label, []).append({
+                    "used": finger_used or "Unknown",
+                    "expected": correct_finger or "N/A",
+                    "correct": is_correct if finger_used else False
+                })
 
                 word = self.words[self.current_word_index]
                 idx = len(current)

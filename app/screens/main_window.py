@@ -37,8 +37,8 @@ class MainWindow(QMainWindow):
         self.confirm_screen.start_camera_with_overlay()
         self.stack.setCurrentWidget(self.confirm_screen)
 
-    def show_result_screen(self, wpm, accuracy):
-        self.result_screen.update_results(wpm, accuracy)
+    def show_result_screen(self, wpm, accuracy, finger_stats):
+        self.result_screen = ResultScreen(self, wpm, accuracy, finger_stats)
         self.stack.setCurrentWidget(self.result_screen)
 
     def go_to_typing_test_screen(self):
