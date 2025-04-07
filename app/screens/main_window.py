@@ -33,11 +33,9 @@ class MainWindow(QMainWindow):
         self.confirm_screen.start_camera_with_overlay()
         self.stack.setCurrentWidget(self.confirm_screen)
 
-    def show_result_screen(self, wpm, accuracy, finger_data):
-        print("About to show result screen")
-        print("WPM:", wpm, "Accuracy:", accuracy)
-        print("Finger Data:", finger_data)
-        self.result_screen = ResultScreen(self, wpm=wpm, accuracy=accuracy, finger_stats=finger_data)
+    def show_result_screen(self, wpm, accuracy, finger_data, time_taken):
+        self.result_screen = ResultScreen(self, wpm=wpm, accuracy=accuracy, finger_stats=finger_data,
+                                          time_taken=time_taken)
         self.stack.addWidget(self.result_screen)
         self.stack.setCurrentWidget(self.result_screen)
 

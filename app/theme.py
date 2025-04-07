@@ -5,6 +5,7 @@ def apply_theme(widget):
             color: #B0D4CC;
             font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
         }
+        
 
         QLabel {
             color: #B0D4CC;
@@ -31,18 +32,19 @@ def apply_theme(widget):
     """)
 
 FINGER_COLORS = {
-    "Left Pinky":    (244, 67, 54),    # Red
-    "Left Ring":     (33, 150, 243),   # Blue
-    "Left Middle":   (76, 175, 80),    # Green
-    "Left Index":    (255, 193, 7),    # Amber
-    "Left Thumb":    (156, 39, 176),   # Purple
+    "Left Pinky":    (255, 100, 100),   # Bright Red
+    "Left Ring":     (80, 180, 255),    # Bright Blue
+    "Left Middle":   (100, 255, 100),   # Bright Green
+    "Left Index":    (255, 220, 100),   # Bright Amber
+    "Left Thumb":    (200, 100, 255),   # Bright Purple
 
-    "Right Thumb":   (255, 87, 34),    # Deep Orange
-    "Right Index":   (0, 188, 212),    # Cyan
-    "Right Middle":  (205, 220, 57),   # Lime
-    "Right Ring":    (121, 85, 72),    # Brown
-    "Right Pinky":   (63, 81, 181),    # Indigo
+    "Right Thumb":   (200, 100, 255),   # Bright Purple
+    "Right Index":   (100, 255, 255),   # Bright Cyan
+    "Right Middle":  (230, 255, 100),   # Bright Lime
+    "Right Ring":    (160, 110, 90),    # Warmer Brown
+    "Right Pinky":   (100, 120, 255),   # Brighter Indigo
 }
+
 
 def get_finger_color(finger_label):
     return FINGER_COLORS.get(finger_label, (255, 255, 255))

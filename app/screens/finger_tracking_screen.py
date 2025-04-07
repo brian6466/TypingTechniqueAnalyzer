@@ -56,7 +56,12 @@ class FingerTrackingScreen(QWidget):
         self.target_key_label = key_label
         if expected_finger is None:
             expected_finger = self.technique_map.get(key_label, "Unknown")
+
+        if isinstance(expected_finger, list):
+            expected_finger = expected_finger[0]
+
         self.expected_finger = expected_finger
+
 
     def get_finger_that_pressed_key(self, key_label):
         if key_label not in self.key_data:
@@ -119,7 +124,8 @@ class FingerTrackingScreen(QWidget):
                     finger_label = f"{hand_label} {name}"
 
                     color = get_finger_color(finger_label)
-                    cv2.circle(frame, (cx, cy), 12, color, -1)
+                    cv2.circle(frame, (cx, cy), 5, color, -1)
+
 
         if self.target_key_label and self.target_key_label in self.key_data:
             x1, y1, x2, y2 = self.key_data[self.target_key_label]
@@ -129,8 +135,13 @@ class FingerTrackingScreen(QWidget):
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
-            text = f"Use: {finger_label}"
-            cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2, cv2.LINE_AA)
+            text = f"{finger_label}"
+            (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)
+
+            x = (frame.shape[1] - text_width) // 2
+            y = frame.shape[0] - 30
+
+            cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2, cv2.LINE_AA)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = frame.shape

@@ -2,8 +2,6 @@ from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QHBoxLayo
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen
 from PyQt5.QtCore import Qt, QTimer, QRect, QPoint
 import cv2
-import json
-import os
 from app.theme import apply_theme
 from app.util.config_manager import load_config
 
@@ -18,7 +16,13 @@ class ConfirmScreen(QWidget):
 
         self.image_label = QLabel()
         self.image_label.setFixedSize(1280, 720)
+        self.image_label.setStyleSheet("background-color: black;")
         self.layout.addWidget(self.image_label)
+
+        self.loading_label = QLabel("Loading camera...")
+        self.loading_label.setStyleSheet("font-size: 24px; color: white; background-color: black;")
+        self.loading_label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.loading_label)
 
         button_layout = QHBoxLayout()
         self.confirm_btn = QPushButton("Continue")
@@ -51,7 +55,16 @@ class ConfirmScreen(QWidget):
             print("Error opening camera")
             return
 
-        self.timer.start(30)
+        self.wait_for_first_frame()
+
+    def wait_for_first_frame(self):
+        ret, _ = self.cap.read()
+        if ret:
+            self.loading_label.hide()
+            self.timer.start(30)
+            self.main_window.stack.setCurrentWidget(self)
+        else:
+            QTimer.singleShot(100, self.wait_for_first_frame)
 
     def stop_camera(self):
         print("Stopping camera")

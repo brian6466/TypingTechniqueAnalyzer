@@ -14,17 +14,22 @@ class TypingTestScreen(QWidget):
         self.main_window = main_window
         self.setFocusPolicy(Qt.StrongFocus)
 
+        self.finger_tracking_screen = FingerTrackingScreen()
+        self.finger_tracking_screen.show()
+
         self.word_bank = [
             "cat", "dog", "apple", "banana", "table", "chair", "hello", "world", "code", "type",
             "quick", "brown", "fox", "jump", "lazy", "day", "sun", "moon", "note", "play"
         ]
 
-        self.num_words = 5
+        self.num_words = 15
         self.words = []
         self.typed_words = []
         self.errors = []
         self.finished_words = []
         self.finger_stats = {}
+        self.total_keystrokes = 0
+        self.correct_finger_map = load_config("technique") or {}
         self.current_word_index = 0
         self.timer = QTimer()
         self.elapsed = 0
@@ -37,7 +42,11 @@ class TypingTestScreen(QWidget):
 
         self.timer_label = QLabel("0s")
         self.timer_label.setAlignment(Qt.AlignCenter)
-        self.timer_label.setStyleSheet("font-size: 24px;")
+        self.timer_label.setStyleSheet("""
+            font-size: 36px;
+            line-height: 48px;
+        """)
+
         self.layout.addWidget(self.timer_label)
 
         self.text_label = QLabel()
@@ -46,7 +55,6 @@ class TypingTestScreen(QWidget):
         self.text_label.setFixedHeight(180)
         self.text_label.setStyleSheet("""
             font-size: 36px;
-            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
             letter-spacing: 2px;
             line-height: 48px;
         """)
@@ -54,10 +62,7 @@ class TypingTestScreen(QWidget):
 
         self.reset_test()
 
-        self.finger_tracking_screen = FingerTrackingScreen()
-        self.finger_tracking_screen.show()
-
-        self.strict_mode = True
+        self.strict_mode = False
 
         apply_theme(self)
 
@@ -68,29 +73,34 @@ class TypingTestScreen(QWidget):
         self.finished_words = [False for _ in self.words]
         self.current_word_index = 0
         self.elapsed = 0
-        self.timer_label.setText("0s")
+        self.total_keystrokes = 0
+        self.finger_stats = {}
+        self.timer_label.setText("0")
         self.timer.stop()
         self.update_display()
+        self.update_expected_finger_overlay()
 
     def start_timer(self):
-        self.timer.start(1000)
+        self.timer.start(100)
 
     def update_timer(self):
-        self.elapsed += 1
-        self.update_wpm_display()
+        self.elapsed += 100
+        self.update_timer_display()
 
-    def update_wpm_display(self):
-        self.timer_label.setText(f"{self.elapsed}s")
+    def update_timer_display(self):
+        seconds = self.elapsed // 1000
+        self.timer_label.setText(f"{seconds}s")
 
     def keyPressEvent(self, event):
         if not self.timer.isActive():
-            self.elapsed = 1
-            self.update_wpm_display()
+            self.elapsed = 100
+            self.update_timer_display()
             self.start_timer()
 
         current = self.typed_words[self.current_word_index]
 
         if event.key() == Qt.Key_Backspace:
+            self.total_keystrokes += 1
             if current:
                 self.typed_words[self.current_word_index] = current[:-1]
                 if self.errors[self.current_word_index] > 0:
@@ -100,10 +110,21 @@ class TypingTestScreen(QWidget):
                         self.words[self.current_word_index - 1] != self.typed_words[self.current_word_index - 1]:
                     self.current_word_index -= 1
 
+
         elif event.key() == Qt.Key_Space:
+            self.total_keystrokes += 1
             self.finished_words[self.current_word_index] = True
-            if self.current_word_index < len(self.words) - 1:
+            if self.current_word_index == len(self.words) - 1:
+                self.timer.stop()
+                if self.elapsed == 0:
+                    self.elapsed = 1
+                accuracy = self.calculate_accuracy()
+                wpm = self.calculate_wpm()
+                self.main_window.show_result_screen(wpm, accuracy, self.finger_stats, self.elapsed)
+                return
+            else:
                 self.current_word_index += 1
+
 
         elif event.key() == Qt.Key_Escape:
             self.reset_test()
@@ -111,11 +132,9 @@ class TypingTestScreen(QWidget):
         else:
             char = event.text()
             if char.isalpha():
+                self.total_keystrokes += 1
                 key_label = char.upper()
                 finger_used = self.finger_tracking_screen.get_finger_that_pressed_key(key_label)
-
-                if not hasattr(self, "correct_finger_map"):
-                    self.correct_finger_map = load_config("technique") or {}
 
                 correct_finger = self.correct_finger_map.get(key_label)
                 is_correct = False
@@ -162,14 +181,14 @@ class TypingTestScreen(QWidget):
                 self.typed_words[-1] == self.words[-1]:
             self.timer.stop()
             if self.elapsed == 0:
-                self.elapsed = 1
+                if self.elapsed == 0:
+                    self.elapsed = 100
             accuracy = self.calculate_accuracy()
             wpm = self.calculate_wpm()
-            self.main_window.show_result_screen(wpm, accuracy, self.finger_stats)
+            self.main_window.show_result_screen(wpm, accuracy, self.finger_stats, self.elapsed // 1000)
             return
 
         self.update_display()
-        self.update_wpm_display()
         self.update_expected_finger_overlay()
 
     def update_expected_finger_overlay(self):
@@ -177,7 +196,9 @@ class TypingTestScreen(QWidget):
         typed = self.typed_words[self.current_word_index]
         idx = len(typed)
 
-        if idx < len(current_word):
+        if idx == len(current_word):
+            self.finger_tracking_screen.set_target_key(" ", self.correct_finger_map.get(" "))
+        elif idx < len(current_word):
             key = current_word[idx].upper()
             expected_finger = self.correct_finger_map.get(key, "Unknown")
             self.finger_tracking_screen.set_target_key(key, expected_finger)
@@ -236,21 +257,24 @@ class TypingTestScreen(QWidget):
         self.text_label.setText(display)
 
     def calculate_accuracy(self):
-        total_chars = 0
+        total_typed_chars = sum(len(w) for w in self.typed_words)
         correct_chars = 0
 
         for i, word in enumerate(self.words):
             typed = self.typed_words[i]
-            for j in range(min(len(word), len(typed))):
-                if word[j] == typed[j]:
+            for j, char in enumerate(typed):
+                if j < len(word) and char == word[j]:
                     correct_chars += 1
-            total_chars += len(word)
 
-        return round((correct_chars / total_chars) * 100, 1) if total_chars else 0.0
+        return round((correct_chars / total_typed_chars) * 100, 1) if total_typed_chars > 0 else 0.0
 
     def calculate_wpm(self):
-        correct = 0
-        for i in range(len(self.words)):
-            if self.words[i] == self.typed_words[i]:
-                correct += 1
-        return int((correct / max(self.elapsed, 1)) * 60)
+        total_typed_chars = sum(len(w) for w in self.typed_words)
+        minutes = self.elapsed / (1000 * 60)
+        return round((total_typed_chars / 5) / minutes, 1) if minutes > 0 else 0.0
+
+
+
+
+
+
