@@ -25,7 +25,7 @@ class FingerTrackingScreen(QWidget):
         self.video_label.setFixedSize(1272, 712)
         self.layout.addWidget(self.video_label)
 
-        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 

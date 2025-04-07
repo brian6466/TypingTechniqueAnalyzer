@@ -61,36 +61,45 @@ class ConfirmScreen(QWidget):
             self.cap = None
 
     def update_frame(self):
-        if not self.cap:
+        if not self.cap or not self.cap.isOpened():
             return
 
         ret, frame = self.cap.read()
-        if not ret:
+        if not ret or frame is None:
             print("Failed to read frame from webcam")
             return
 
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        h, w, ch = frame_rgb.shape
-        bytes_per_line = ch * w
-        qt_img = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
-        pixmap = QPixmap.fromImage(qt_img)
+        try:
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            h, w, ch = frame_rgb.shape
+            bytes_per_line = ch * w
+            qt_img = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            if qt_img.isNull():
+                print("Invalid QImage")
+                return
 
-        # Draw overlays
-        painter = QPainter(pixmap)
-        pen = QPen(Qt.green, 2, Qt.SolidLine)
-        painter.setPen(pen)
+            pixmap = QPixmap.fromImage(qt_img)
+            if pixmap.isNull():
+                print("Invalid QPixmap")
+                return
 
-        for label, coords in self.key_coords.items():
-            try:
-                x1, y1, x2, y2 = coords
-                rect = QRect(x1, y1, x2 - x1, y2 - y1)
-                painter.drawRect(rect)
-                painter.drawText(QPoint(x1 + 5, y1 - 5), label)
-            except Exception as e:
-                print(f"Error drawing label '{label}': {e}")
+            painter = QPainter(pixmap)
+            pen = QPen(Qt.green, 2, Qt.SolidLine)
+            painter.setPen(pen)
 
-        painter.end()
-        self.image_label.setPixmap(pixmap)
+            for label, coords in self.key_coords.items():
+                try:
+                    x1, y1, x2, y2 = coords
+                    rect = QRect(x1, y1, x2 - x1, y2 - y1)
+                    painter.drawRect(rect)
+                    painter.drawText(QPoint(x1 + 5, y1 - 5), label)
+                except Exception as e:
+                    print(f"Error drawing label '{label}': {e}")
+
+            painter.end()
+            self.image_label.setPixmap(pixmap)
+        except Exception as e:
+            print("Exception in update_frame:", e)
 
     def load_key_coords(self):
         data = load_config("keys")

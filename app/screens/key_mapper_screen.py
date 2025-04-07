@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QInputDia
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
 from PyQt5.QtCore import Qt, QRect, QPoint, QTimer
 import cv2
-import json
+from app.util.config_manager import save_config
 
 from app.theme import apply_theme
 
@@ -60,10 +60,14 @@ class KeyMapperScreen(QWidget):
             self.undo_btn.setEnabled(True)
 
     def save_coords(self):
+        print(self.image_label.key_coords)
         coords = self.image_label.key_coords
-        with open("app/assets/keys.json", "w") as f:
-            json.dump(coords, f, indent=4)
-        print("Saved key coordinates.")
+
+        if save_config("keys", coords):
+            print("Saved key coordinates.")
+        else:
+            print("Failed to save key coordinates.")
+
         self.main_window.go_to_confirm_screen()
 
 
