@@ -29,3 +29,20 @@ def apply_theme(widget):
             border: 1px dashed #B0D4CC;
         }
     """)
+
+FINGER_COLORS = {
+    "Left Pinky":    (244, 67, 54),    # Red
+    "Left Ring":     (33, 150, 243),   # Blue
+    "Left Middle":   (76, 175, 80),    # Green
+    "Left Index":    (255, 193, 7),    # Amber
+    "Left Thumb":    (156, 39, 176),   # Purple
+
+    "Right Thumb":   (255, 87, 34),    # Deep Orange
+    "Right Index":   (0, 188, 212),    # Cyan
+    "Right Middle":  (205, 220, 57),   # Lime
+    "Right Ring":    (121, 85, 72),    # Brown
+    "Right Pinky":   (63, 81, 181),    # Indigo
+}
+
+def get_finger_color(finger_label):
+    return FINGER_COLORS.get(finger_label, (255, 255, 255))

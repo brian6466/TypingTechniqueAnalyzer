@@ -15,15 +15,11 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         self.setCentralWidget(self.stack)
 
-
-
         self.confirm_screen = ConfirmScreen(self)
         self.key_mapper_screen = KeyMapperScreen(self)
-        self.result_screen = ResultScreen(self)
 
         self.stack.addWidget(self.confirm_screen)     
         self.stack.addWidget(self.key_mapper_screen)
-        self.stack.addWidget(self.result_screen)
 
         if config_exists("keys"):
             self.confirm_screen.start_camera_with_overlay()
@@ -37,8 +33,12 @@ class MainWindow(QMainWindow):
         self.confirm_screen.start_camera_with_overlay()
         self.stack.setCurrentWidget(self.confirm_screen)
 
-    def show_result_screen(self, wpm, accuracy, finger_stats):
-        self.result_screen = ResultScreen(self, wpm, accuracy, finger_stats)
+    def show_result_screen(self, wpm, accuracy, finger_data):
+        print("About to show result screen")
+        print("WPM:", wpm, "Accuracy:", accuracy)
+        print("Finger Data:", finger_data)
+        self.result_screen = ResultScreen(self, wpm=wpm, accuracy=accuracy, finger_stats=finger_data)
+        self.stack.addWidget(self.result_screen)
         self.stack.setCurrentWidget(self.result_screen)
 
     def go_to_typing_test_screen(self):

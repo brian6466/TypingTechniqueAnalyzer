@@ -57,6 +57,8 @@ class TypingTestScreen(QWidget):
         self.finger_tracking_screen = FingerTrackingScreen()
         self.finger_tracking_screen.show()
 
+        self.strict_mode = True
+
         apply_theme(self)
 
     def reset_test(self):
@@ -95,7 +97,7 @@ class TypingTestScreen(QWidget):
                     self.errors[self.current_word_index] -= 1
             elif self.current_word_index > 0:
                 if not self.finished_words[self.current_word_index - 1] or \
-                   self.words[self.current_word_index - 1] != self.typed_words[self.current_word_index - 1]:
+                        self.words[self.current_word_index - 1] != self.typed_words[self.current_word_index - 1]:
                     self.current_word_index -= 1
 
         elif event.key() == Qt.Key_Space:
@@ -110,27 +112,25 @@ class TypingTestScreen(QWidget):
             char = event.text()
             if char.isalpha():
                 key_label = char.upper()
-
                 finger_used = self.finger_tracking_screen.get_finger_that_pressed_key(key_label)
 
-                if not hasattr(self, "technique_map"):
+                if not hasattr(self, "correct_finger_map"):
                     self.correct_finger_map = load_config("technique") or {}
 
+                correct_finger = self.correct_finger_map.get(key_label)
+                is_correct = False
+
                 if finger_used:
-                    correct_finger = self.correct_finger_map.get(key_label)
-
-                    if correct_finger:
-                        if isinstance(correct_finger, list):
-                            is_correct = finger_used in correct_finger
-                        else:
-                            is_correct = finger_used == correct_finger
-
-                        result = "Correct" if is_correct else "Incorrect"
-                        print(f"[{result}] Key '{key_label}' - Used: {finger_used} | Expected: {correct_finger}")
+                    if isinstance(correct_finger, list):
+                        is_correct = finger_used in correct_finger
                     else:
-                        print(f"[Unknown] Key '{key_label}' - Used: {finger_used} | No mapping found.")
+                        is_correct = finger_used == correct_finger
+
+                    print(
+                        f"[{('Correct' if is_correct else 'Incorrect')}] Key '{key_label}' - Used: {finger_used} | Expected: {correct_finger}")
                 else:
                     print(f"[Error] Couldn't detect finger for key '{key_label}'")
+                    finger_used = "Unknown"
 
                 self.finger_stats.setdefault(key_label, []).append({
                     "used": finger_used or "Unknown",
@@ -141,28 +141,48 @@ class TypingTestScreen(QWidget):
                 word = self.words[self.current_word_index]
                 idx = len(current)
 
-                if idx < len(word):
-                    if char.lower() != word[idx]:
-                        self.errors[self.current_word_index] += 1
-                elif idx - len(word) < 10:
-                    self.errors[self.current_word_index] += 1
+                if getattr(self, "strict_mode", False):
+                    if idx < len(word) and char.lower() == word[idx] and is_correct:
+                        self.typed_words[self.current_word_index] += char.lower()
+                    else:
+                        print("[Strict Mode] Input rejected — must match character and finger.")
+                        return
                 else:
-                    return
+                    if idx < len(word):
+                        if char.lower() != word[idx]:
+                            self.errors[self.current_word_index] += 1
+                    elif idx - len(word) < 10:
+                        self.errors[self.current_word_index] += 1
+                    else:
+                        return
 
-                self.typed_words[self.current_word_index] += char.lower()
+                    self.typed_words[self.current_word_index] += char.lower()
 
         if self.current_word_index == len(self.words) - 1 and \
-           self.typed_words[-1] == self.words[-1]:
+                self.typed_words[-1] == self.words[-1]:
             self.timer.stop()
             if self.elapsed == 0:
                 self.elapsed = 1
             accuracy = self.calculate_accuracy()
             wpm = self.calculate_wpm()
-            self.main_window.show_result_screen(wpm, accuracy)
+            self.main_window.show_result_screen(wpm, accuracy, self.finger_stats)
             return
 
         self.update_display()
         self.update_wpm_display()
+        self.update_expected_finger_overlay()
+
+    def update_expected_finger_overlay(self):
+        current_word = self.words[self.current_word_index]
+        typed = self.typed_words[self.current_word_index]
+        idx = len(typed)
+
+        if idx < len(current_word):
+            key = current_word[idx].upper()
+            expected_finger = self.correct_finger_map.get(key, "Unknown")
+            self.finger_tracking_screen.set_target_key(key, expected_finger)
+        else:
+            self.finger_tracking_screen.set_target_key(None)
 
     def update_display(self):
         words_per_line = 10
