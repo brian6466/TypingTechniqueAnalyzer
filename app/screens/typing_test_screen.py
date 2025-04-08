@@ -6,6 +6,7 @@ import html
 from app.screens.finger_tracking_screen import FingerTrackingScreen
 from app.theme import apply_theme
 from app.util.config_manager import load_config
+from app.assets.words import WORDS
 
 
 class TypingTestScreen(QWidget):
@@ -13,16 +14,15 @@ class TypingTestScreen(QWidget):
         super().__init__()
         self.main_window = main_window
         self.setFocusPolicy(Qt.StrongFocus)
+        self.setMinimumSize(1200, 400)
+        self.main_window.setFixedSize(1200, 400)
 
         self.finger_tracking_screen = FingerTrackingScreen()
         self.finger_tracking_screen.show()
 
-        self.word_bank = [
-            "cat", "dog", "apple", "banana", "table", "chair", "hello", "world", "code", "type",
-            "quick", "brown", "fox", "jump", "lazy", "day", "sun", "moon", "note", "play"
-        ]
+        self.word_bank = WORDS
 
-        self.num_words = 15
+        self.num_words = 40
         self.words = []
         self.typed_words = []
         self.errors = []
