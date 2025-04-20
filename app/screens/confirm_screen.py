@@ -44,16 +44,11 @@ class ConfirmScreen(QWidget):
         apply_theme(self)
 
     def start_camera_with_overlay(self):
-        print("Starting camera with overlay")
         self.key_coords = self.load_key_coords()
 
         self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-        if not self.cap.isOpened():
-            print("Error opening camera")
-            return
 
         self.wait_for_first_frame()
 
@@ -67,7 +62,6 @@ class ConfirmScreen(QWidget):
             QTimer.singleShot(100, self.wait_for_first_frame)
 
     def stop_camera(self):
-        print("Stopping camera")
         self.timer.stop()
         if self.cap:
             self.cap.release()
@@ -78,9 +72,6 @@ class ConfirmScreen(QWidget):
             return
 
         ret, frame = self.cap.read()
-        if not ret or frame is None:
-            print("Failed to read frame from webcam")
-            return
 
         try:
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

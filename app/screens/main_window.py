@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
         self.confirm_screen = ConfirmScreen(self)
         self.key_mapper_screen = KeyMapperScreen(self)
 
-        self.stack.addWidget(self.confirm_screen)     
+        self.stack.addWidget(self.confirm_screen)
         self.stack.addWidget(self.key_mapper_screen)
 
         if config_exists("keys"):

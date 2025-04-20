@@ -3,7 +3,8 @@ from PyQt5.QtCore import Qt, QTimer
 import random
 import html
 
-from app.screens.finger_tracking_screen import FingerTrackingScreen
+from app.screens.mediapipe_finger_tracking_screen import MediaPipeFingerTrackingScreen
+from app.screens.mmpose_finger_tracking_screen import MMPoseFingerTrackingScreen
 from app.theme import apply_theme
 from app.util.config_manager import load_config
 from app.assets.words import WORDS
@@ -17,8 +18,13 @@ class TypingTestScreen(QWidget):
         self.setMinimumSize(1200, 400)
         self.main_window.setFixedSize(1200, 400)
 
-        self.finger_tracking_screen = FingerTrackingScreen()
-        self.finger_tracking_screen.show()
+        self.strict_mode = True
+        HAND_TRACKING_METHOD = "MMPose"
+
+        if HAND_TRACKING_METHOD == "mediapipe":
+            self.finger_tracking_screen = MediaPipeFingerTrackingScreen()
+        else:
+            self.finger_tracking_screen = MMPoseFingerTrackingScreen()
 
         self.word_bank = WORDS
 
@@ -61,8 +67,6 @@ class TypingTestScreen(QWidget):
         self.layout.addWidget(self.text_label)
 
         self.reset_test()
-
-        self.strict_mode = False
 
         apply_theme(self)
 
