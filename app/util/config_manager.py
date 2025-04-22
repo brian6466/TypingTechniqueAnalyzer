@@ -5,7 +5,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CONFIG_PATHS = {
     "keys": os.path.join(BASE_DIR, "assets", "keys.json"),
-    "technique": os.path.join(BASE_DIR, "assets", "technique.json")
+    "technique": os.path.join(BASE_DIR, "assets", "technique.json"),
+    "keymap": os.path.join(BASE_DIR, "assets", "keymap.json")
 }
 
 def config_exists(which):

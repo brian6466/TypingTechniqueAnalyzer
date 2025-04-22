@@ -1,0 +1,6 @@
+path: C:/Users/brian/PycharmProjects/FYP/keyboard_dataset
+train: images/train
+val: images/val
+
+names:
+  0: keyboard

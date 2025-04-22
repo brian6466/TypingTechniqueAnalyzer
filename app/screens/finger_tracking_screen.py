@@ -5,16 +5,13 @@ import cv2
 import mediapipe as mp
 import math
 from app.util.config_manager import load_config
-
-
-
 from app.theme import apply_theme, get_finger_color
 
 
 class FingerTrackingScreen(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Mediapipe Hands Tracking")
+        self.setWindowTitle("Finger Tracking")
         self.setFixedSize(1280, 720)
 
         self.layout = QVBoxLayout()
@@ -44,12 +41,12 @@ class FingerTrackingScreen(QWidget):
 
         apply_theme(self)
 
-    FINGERTIP_IDS = {
-        4: "Thumb",
-        8: "Index",
-        12: "Middle",
-        16: "Ring",
-        20: "Pinky"
+    FINGER_LANDMARKS = {
+        "Thumb": [1, 2, 3, 4],
+        "Index": [5, 6, 7, 8],
+        "Middle": [9, 10, 11, 12],
+        "Ring": [13, 14, 15, 16],
+        "Pinky": [17, 18, 19, 20],
     }
 
     def set_target_key(self, key_label, expected_finger=None):
@@ -61,7 +58,6 @@ class FingerTrackingScreen(QWidget):
             expected_finger = expected_finger[0]
 
         self.expected_finger = expected_finger
-
 
     def get_finger_that_pressed_key(self, key_label):
         if key_label not in self.key_data:
@@ -90,8 +86,8 @@ class FingerTrackingScreen(QWidget):
             raw_label = hand_handedness.classification[0].label
             hand_label = "Left" if raw_label == "Right" else "Right"
 
-            for idx, name in self.FINGERTIP_IDS.items():
-                lm = hand_landmarks.landmark[idx]
+            for tip_idx, name in {4: "Thumb", 8: "Index", 12: "Middle", 16: "Ring", 20: "Pinky"}.items():
+                lm = hand_landmarks.landmark[tip_idx]
                 fx, fy = int(lm.x * w), int(lm.y * h)
 
                 dist = math.hypot(fx - key_center[0], fy - key_center[1])
@@ -118,14 +114,22 @@ class FingerTrackingScreen(QWidget):
 
                 h, w, _ = frame.shape
 
-                for idx, name in self.FINGERTIP_IDS.items():
-                    lm = hand_landmarks.landmark[idx]
-                    cx, cy = int(lm.x * w), int(lm.y * h)
-                    finger_label = f"{hand_label} {name}"
-
+                finger_nodes = set()
+                for finger_name, indices in self.FINGER_LANDMARKS.items():
+                    finger_label = f"{hand_label} {finger_name}"
                     color = get_finger_color(finger_label)
-                    cv2.circle(frame, (cx, cy), 5, color, -1)
 
+                    for idx in indices:
+                        lm = hand_landmarks.landmark[idx]
+                        cx, cy = int(lm.x * w), int(lm.y * h)
+                        cv2.circle(frame, (cx, cy), 5, color, -1)
+                        finger_nodes.add(idx)
+
+                for idx in range(21):
+                    if idx not in finger_nodes:
+                        lm = hand_landmarks.landmark[idx]
+                        cx, cy = int(lm.x * w), int(lm.y * h)
+                        cv2.circle(frame, (cx, cy), 5, (255, 255, 255), -1)
 
         if self.target_key_label and self.target_key_label in self.key_data:
             x1, y1, x2, y2 = self.key_data[self.target_key_label]

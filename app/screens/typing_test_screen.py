@@ -62,7 +62,7 @@ class TypingTestScreen(QWidget):
 
         self.reset_test()
 
-        self.strict_mode = False
+        self.strict_mode = True
 
         apply_theme(self)
 

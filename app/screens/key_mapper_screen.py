@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QInputDia
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
 from PyQt5.QtCore import Qt, QRect, QPoint, QTimer
 import cv2
+from ultralytics import YOLO
 from app.util.config_manager import save_config
-
 from app.theme import apply_theme
 
 
@@ -11,6 +11,7 @@ class KeyMapperScreen(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        self.mapping_mode = "manual"
         self.setWindowTitle("Key Mapper")
         self.layout = QVBoxLayout(self)
 
@@ -32,7 +33,10 @@ class KeyMapperScreen(QWidget):
         self.undo_btn.setEnabled(False)
         self.layout.addWidget(self.undo_btn)
 
-        # Setup webcam preview at 1280x720
+        self.back_btn = QPushButton("Back")
+        self.back_btn.clicked.connect(self.go_back_to_confirm)
+        self.layout.addWidget(self.back_btn)
+
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
@@ -41,11 +45,22 @@ class KeyMapperScreen(QWidget):
         self.timer.timeout.connect(self.update_preview)
         self.timer.start(30)
 
+        self.yolo_model = YOLO("runs/detect/train/weights/best.pt")
+
         apply_theme(self)
 
     def update_preview(self):
         ret, frame = self.cap.read()
         if ret:
+            if self.mapping_mode == "YOLO":
+                results = self.yolo_model(frame, conf=0.5)[0]
+                for box in results.boxes:
+                    cls = int(box.cls[0])
+                    label = self.yolo_model.names[cls]
+                    if label == "keyboard":
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                        self.image_label.set_keyboard_box((x1, y1, x2, y2))
             self.image_label.show_preview_frame(frame)
 
     def capture_screenshot(self):
@@ -60,14 +75,17 @@ class KeyMapperScreen(QWidget):
             self.undo_btn.setEnabled(True)
 
     def save_coords(self):
-        print(self.image_label.key_coords)
-        coords = self.image_label.key_coords
+        coords = self.image_label.get_final_coords()
+        target_file = "keymap" if self.mapping_mode == "YOLO" else "keys"
 
-        if save_config("keys", coords):
-            print("Saved key coordinates.")
-        else:
-            print("Failed to save key coordinates.")
+        save_config(target_file, coords)
 
+        self.main_window.go_to_confirm_screen()
+
+    def go_back_to_confirm(self):
+        if self.cap:
+            self.timer.stop()
+            self.cap.release()
         self.main_window.go_to_confirm_screen()
 
 
@@ -81,6 +99,25 @@ class DrawLabel(QLabel):
         self.end_point = None
         self.rects = []
         self.key_coords = {}
+        self.keyboard_box = None
+
+    def set_keyboard_box(self, box):
+        self.keyboard_box = box
+
+    def get_final_coords(self):
+        if self.keyboard_box:
+            x1, y1, x2, y2 = self.keyboard_box
+            w = x2 - x1
+            h = y2 - y1
+            rel_coords = {}
+            for label, rect in self.key_coords.items():
+                rx1 = (rect[0] - x1) / w
+                ry1 = (rect[1] - y1) / h
+                rx2 = (rect[2] - x1) / w
+                ry2 = (rect[3] - y1) / h
+                rel_coords[label] = [rx1, ry1, rx2, ry2]
+            return rel_coords
+        return self.key_coords
 
     def undo_last_box(self):
         if self.rects:
@@ -135,6 +172,13 @@ class DrawLabel(QLabel):
                 pen = QPen(Qt.red, 2, Qt.SolidLine)
                 painter.setPen(pen)
 
+                if self.keyboard_box:
+                    x1, y1, x2, y2 = self.keyboard_box
+                    kb_rect = QRect(x1, y1, x2 - x1, y2 - y1)
+                    painter.setPen(QPen(Qt.blue, 2))
+                    painter.drawRect(kb_rect)
+
+                painter.setPen(QPen(Qt.red, 2))
                 for rect, label in self.rects:
                     painter.drawRect(rect)
                     painter.drawText(rect.topLeft() + QPoint(5, -5), label)
