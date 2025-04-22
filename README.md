@@ -27,4 +27,4 @@ When first running the application you will be brought to the confirm screen, in
 
 If YOLO doesnt work on your keyboard, you can use manual mapping instead.
 
-On the typing test screen make sure you are focused on the typing test screen and not the finger tracking screen as thats where we read the key inputs.
+On the typing test screen make sure you are focused on the typing test screen and not the finger tracking screen as thats where we read the key inputs. You can see the finger tracking screen as you type and it will indicate to you what finger to press. Once you finish the prompt you will be directed to the results screen where you can see your score.

@@ -25,13 +25,14 @@ class TypingTestScreen(QWidget):
         self.finger_tracking_screen.show()
 
         self.word_bank = WORDS
-        self.num_words = 40
+        self.num_words = 10
         self.words = []
         self.typed_words = []
         self.errors = []
         self.finished_words = []
         self.finger_stats = {}
         self.total_keystrokes = 0
+        self.incorrect_keystrokes = 0
         self.correct_finger_map = load_config("technique") or {}
         self.current_word_index = 0
         self.timer = QTimer()
@@ -69,6 +70,7 @@ class TypingTestScreen(QWidget):
         self.current_word_index = 0
         self.elapsed = 0
         self.total_keystrokes = 0
+        self.incorrect_keystrokes = 0
         self.finger_stats = {}
         self.timer_label.setText("0")
         self.timer.stop()
@@ -108,7 +110,6 @@ class TypingTestScreen(QWidget):
         elif event.key() == Qt.Key_Space:
             if not self.typed_words[self.current_word_index]:
                 return
-
             self.total_keystrokes += 1
             self.finished_words[self.current_word_index] = True
             if self.current_word_index == len(self.words) - 1:
@@ -156,17 +157,21 @@ class TypingTestScreen(QWidget):
                 idx = len(current)
 
                 if self.strict_mode:
-                    if idx < len(word) and char == word[idx] and is_correct:
-                        self.typed_words[self.current_word_index] += char
-                    else:
-                        print("[Strict Mode] Rejected: character or finger mismatch.")
-                        return
+                    if idx < len(word):
+                        if char == word[idx] and is_correct:
+                            self.typed_words[self.current_word_index] += char
+                        else:
+                            self.incorrect_keystrokes += 1
+                            print("[Strict Mode] Rejected: character or finger mismatch.")
+                            return
                 else:
                     if idx < len(word):
                         if char != word[idx]:
                             self.errors[self.current_word_index] += 1
+                            self.incorrect_keystrokes += 1
                     elif idx - len(word) < 10:
                         self.errors[self.current_word_index] += 1
+                        self.incorrect_keystrokes += 1
                     else:
                         return
                     self.typed_words[self.current_word_index] += char
@@ -248,16 +253,11 @@ class TypingTestScreen(QWidget):
         self.text_label.setText(display)
 
     def calculate_accuracy(self):
-        total_typed_chars = sum(len(w) for w in self.typed_words)
-        correct_chars = 0
+        total_keypresses = self.total_keystrokes
+        incorrect = self.incorrect_keystrokes
+        correct = total_keypresses - incorrect
 
-        for i, word in enumerate(self.words):
-            typed = self.typed_words[i]
-            for j, char in enumerate(typed):
-                if j < len(word) and char == word[j]:
-                    correct_chars += 1
-
-        return round((correct_chars / total_typed_chars) * 100, 1) if total_typed_chars > 0 else 0.0
+        return round((correct / total_keypresses) * 100, 1) if total_keypresses > 0 else 0.0
 
     def calculate_wpm(self):
         total_typed_chars = sum(len(w) for w in self.typed_words)
