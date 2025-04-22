@@ -7,6 +7,10 @@ import math
 from app.util.config_manager import load_config
 from app.theme import apply_theme, get_finger_color
 
+SHIFT_KEYS = {
+    "!": "1", "@": "2", "#": "3", "$": "4", "%": "5", "^": "6", "&": "7", "*": "8",
+    "(": "9", ")": "0", "_": "-", "+": "=", ":": ";", "\"": "'", "?": "/", "~": "`"
+}
 
 class FingerTrackingScreen(QWidget):
     def __init__(self):
@@ -49,15 +53,8 @@ class FingerTrackingScreen(QWidget):
         "Pinky": [17, 18, 19, 20],
     }
 
-    def set_target_key(self, key_label, expected_finger=None):
-        self.target_key_label = key_label
-        if expected_finger is None:
-            expected_finger = self.technique_map.get(key_label, "Unknown")
-
-        if isinstance(expected_finger, list):
-            expected_finger = expected_finger[0]
-
-        self.expected_finger = expected_finger
+    def set_target_keys(self, key_labels):
+        self.target_key_labels = key_labels if isinstance(key_labels, list) else [key_labels]
 
     def get_finger_that_pressed_key(self, key_label):
         if key_label not in self.key_data:
@@ -78,7 +75,6 @@ class FingerTrackingScreen(QWidget):
             return None
 
         h, w, _ = frame.shape
-
         closest_finger = None
         min_distance = float("inf")
 
@@ -89,7 +85,6 @@ class FingerTrackingScreen(QWidget):
             for tip_idx, name in {4: "Thumb", 8: "Index", 12: "Middle", 16: "Ring", 20: "Pinky"}.items():
                 lm = hand_landmarks.landmark[tip_idx]
                 fx, fy = int(lm.x * w), int(lm.y * h)
-
                 dist = math.hypot(fx - key_center[0], fy - key_center[1])
                 if dist < min_distance:
                     min_distance = dist
@@ -113,8 +108,8 @@ class FingerTrackingScreen(QWidget):
                 self.mp_draw.draw_landmarks(frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
 
                 h, w, _ = frame.shape
-
                 finger_nodes = set()
+
                 for finger_name, indices in self.FINGER_LANDMARKS.items():
                     finger_label = f"{hand_label} {finger_name}"
                     color = get_finger_color(finger_label)
@@ -131,21 +126,16 @@ class FingerTrackingScreen(QWidget):
                         cx, cy = int(lm.x * w), int(lm.y * h)
                         cv2.circle(frame, (cx, cy), 5, (255, 255, 255), -1)
 
-        if self.target_key_label and self.target_key_label in self.key_data:
-            x1, y1, x2, y2 = self.key_data[self.target_key_label]
-
-            finger_label = self.expected_finger or "Unknown"
-            color = get_finger_color(finger_label)
-
-            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-
-            text = f"{finger_label}"
-            (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)
-
-            x = (frame.shape[1] - text_width) // 2
-            y = frame.shape[0] - 30
-
-            cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2, cv2.LINE_AA)
+        if self.target_key_labels:
+            for key in self.target_key_labels:
+                if key not in self.key_data:
+                    continue
+                x1, y1, x2, y2 = self.key_data[key]
+                finger = self.technique_map.get(key, "Unknown")
+                if isinstance(finger, list):
+                    finger = finger[0]
+                color = get_finger_color(finger)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = frame.shape

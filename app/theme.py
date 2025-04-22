@@ -32,17 +32,17 @@ def apply_theme(widget):
     """)
 
 FINGER_COLORS = {
-    "Left Pinky":    (255, 100, 100),   # Bright Red
-    "Left Ring":     (80, 180, 255),    # Bright Blue
-    "Left Middle":   (100, 255, 100),   # Bright Green
-    "Left Index":    (255, 220, 100),   # Bright Amber
-    "Left Thumb":    (200, 100, 255),   # Bright Purple
+    "Left Pinky":    (255, 100, 100),
+    "Left Ring":     (80, 180, 255),
+    "Left Middle":   (100, 255, 100),
+    "Left Index":    (255, 220, 100),
 
-    "Right Thumb":   (200, 100, 255),   # Bright Purple
-    "Right Index":   (100, 255, 255),   # Bright Cyan
-    "Right Middle":  (230, 255, 100),   # Bright Lime
-    "Right Ring":    (160, 110, 90),    # Warmer Brown
-    "Right Pinky":   (100, 120, 255),   # Brighter Indigo
+    "Thumb":    (200, 100, 255),
+
+    "Right Index":   (100, 255, 255),
+    "Right Middle":  (230, 255, 100),
+    "Right Ring":    (160, 110, 90),
+    "Right Pinky":   (100, 120, 255),
 }
 
 
