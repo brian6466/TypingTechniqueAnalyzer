@@ -7,7 +7,6 @@ This projects goal is to make learning typing technique easier and more efficien
 1. Clone the repo:
    ```bash
    git clone https://github.com/brian6466/FYP.git
-   cd typing-tracker
    ```
 2. Install dependencies:
    ```bash
