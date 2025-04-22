@@ -8,6 +8,10 @@ from app.theme import apply_theme
 from app.util.config_manager import load_config
 from app.assets.words import WORDS
 
+SHIFT_KEYS = {
+    "!": "1", "@": "2", "#": "3", "$": "4", "%": "5", "^": "6", "&": "7", "*": "8",
+    "(": "9", ")": "0", "_": "-", "+": "=", ":": ";", "\"": "'", "?": "/", "~": "`"
+}
 
 class TypingTestScreen(QWidget):
     def __init__(self, main_window):
@@ -21,7 +25,6 @@ class TypingTestScreen(QWidget):
         self.finger_tracking_screen.show()
 
         self.word_bank = WORDS
-
         self.num_words = 40
         self.words = []
         self.typed_words = []
@@ -42,32 +45,24 @@ class TypingTestScreen(QWidget):
 
         self.timer_label = QLabel("0s")
         self.timer_label.setAlignment(Qt.AlignCenter)
-        self.timer_label.setStyleSheet("""
-            font-size: 36px;
-            line-height: 48px;
-        """)
-
+        self.timer_label.setStyleSheet("font-size: 36px; line-height: 48px;")
         self.layout.addWidget(self.timer_label)
 
         self.text_label = QLabel()
         self.text_label.setAlignment(Qt.AlignCenter)
         self.text_label.setWordWrap(True)
         self.text_label.setFixedHeight(180)
-        self.text_label.setStyleSheet("""
-            font-size: 36px;
-            letter-spacing: 2px;
-            line-height: 48px;
-        """)
+        self.text_label.setStyleSheet("font-size: 36px; letter-spacing: 2px; line-height: 48px;")
         self.layout.addWidget(self.text_label)
 
-        self.reset_test()
-
         self.strict_mode = True
+        self.reset_test()
 
         apply_theme(self)
 
     def reset_test(self):
         self.words = random.choices(self.word_bank, k=self.num_words)
+        # self.words = ["!", "(", ")", "!", ")", "("] # to test special characters
         self.typed_words = ["" for _ in self.words]
         self.errors = [0 for _ in self.words]
         self.finished_words = [False for _ in self.words]
@@ -110,7 +105,6 @@ class TypingTestScreen(QWidget):
                         self.words[self.current_word_index - 1] != self.typed_words[self.current_word_index - 1]:
                     self.current_word_index -= 1
 
-
         elif event.key() == Qt.Key_Space:
             self.total_keystrokes += 1
             self.finished_words[self.current_word_index] = True
@@ -125,17 +119,17 @@ class TypingTestScreen(QWidget):
             else:
                 self.current_word_index += 1
 
-
         elif event.key() == Qt.Key_Escape:
             self.reset_test()
 
         else:
             char = event.text()
-            if char.isalpha():
+            if char:
                 self.total_keystrokes += 1
-                key_label = char.upper()
+                base_key = SHIFT_KEYS.get(char, char)
+                print(f"Key pressed: {char} | Base key: {base_key}")
+                key_label = base_key.upper()
                 finger_used = self.finger_tracking_screen.get_finger_that_pressed_key(key_label)
-
                 correct_finger = self.correct_finger_map.get(key_label)
                 is_correct = False
 
@@ -144,11 +138,9 @@ class TypingTestScreen(QWidget):
                         is_correct = finger_used in correct_finger
                     else:
                         is_correct = finger_used == correct_finger
-
-                    print(
-                        f"[{('Correct' if is_correct else 'Incorrect')}] Key '{key_label}' - Used: {finger_used} | Expected: {correct_finger}")
+                    print(f"[{'Correct' if is_correct else 'Incorrect'}] '{key_label}' - Used: {finger_used} | Expected: {correct_finger}")
                 else:
-                    print(f"[Error] Couldn't detect finger for key '{key_label}'")
+                    print(f"[Error] Could not detect finger for key '{key_label}'")
                     finger_used = "Unknown"
 
                 self.finger_stats.setdefault(key_label, []).append({
@@ -160,29 +152,26 @@ class TypingTestScreen(QWidget):
                 word = self.words[self.current_word_index]
                 idx = len(current)
 
-                if getattr(self, "strict_mode", False):
-                    if idx < len(word) and char.lower() == word[idx] and is_correct:
-                        self.typed_words[self.current_word_index] += char.lower()
+                if self.strict_mode:
+                    if idx < len(word) and char == word[idx] and is_correct:
+                        self.typed_words[self.current_word_index] += char
                     else:
-                        print("[Strict Mode] Input rejected — must match character and finger.")
+                        print("[Strict Mode] Rejected: character or finger mismatch.")
                         return
                 else:
                     if idx < len(word):
-                        if char.lower() != word[idx]:
+                        if char != word[idx]:
                             self.errors[self.current_word_index] += 1
                     elif idx - len(word) < 10:
                         self.errors[self.current_word_index] += 1
                     else:
                         return
+                    self.typed_words[self.current_word_index] += char
 
-                    self.typed_words[self.current_word_index] += char.lower()
-
-        if self.current_word_index == len(self.words) - 1 and \
-                self.typed_words[-1] == self.words[-1]:
+        if self.current_word_index == len(self.words) - 1 and self.typed_words[-1] == self.words[-1]:
             self.timer.stop()
             if self.elapsed == 0:
-                if self.elapsed == 0:
-                    self.elapsed = 100
+                self.elapsed = 100
             accuracy = self.calculate_accuracy()
             wpm = self.calculate_wpm()
             self.main_window.show_result_screen(wpm, accuracy, self.finger_stats, self.elapsed // 1000)
@@ -197,13 +186,16 @@ class TypingTestScreen(QWidget):
         idx = len(typed)
 
         if idx == len(current_word):
-            self.finger_tracking_screen.set_target_key(" ", self.correct_finger_map.get(" "))
+            self.finger_tracking_screen.set_target_keys([" "])
         elif idx < len(current_word):
-            key = current_word[idx].upper()
-            expected_finger = self.correct_finger_map.get(key, "Unknown")
-            self.finger_tracking_screen.set_target_key(key, expected_finger)
+            char = current_word[idx]
+            base_key = SHIFT_KEYS.get(char, char)
+            keys = [base_key.upper()]
+            if char in SHIFT_KEYS:
+                keys += ["Left Shift", "Right Shift"]
+            self.finger_tracking_screen.set_target_keys(keys)
         else:
-            self.finger_tracking_screen.set_target_key(None)
+            self.finger_tracking_screen.set_target_keys(None)
 
     def update_display(self):
         words_per_line = 10
@@ -226,10 +218,7 @@ class TypingTestScreen(QWidget):
                 is_cursor = (i == self.current_word_index and j == len(typed))
 
                 if j < len(typed):
-                    if expected[j] == typed[j]:
-                        style = "color:#F6FFF8;"
-                    else:
-                        style = "color:red;"
+                    style = "color:#F6FFF8;" if expected[j] == typed[j] else "color:red;"
                     if is_cursor:
                         style += "border-bottom: 3px solid #FFD700;"
                     inner_spans += f'<span style="{style}">{char}</span>'
@@ -239,8 +228,7 @@ class TypingTestScreen(QWidget):
                     inner_spans += f'<span>{char}</span>'
 
             if len(typed) > len(expected):
-                extra_chars = typed[len(expected):][:10]
-                for char in extra_chars:
+                for char in typed[len(expected):][:10]:
                     inner_spans += f'<span style="color:red;">{html.escape(char)}</span>'
 
             styled_word = f'<span style="margin-right: 14px;">{inner_spans}</span>&nbsp;'
@@ -272,9 +260,3 @@ class TypingTestScreen(QWidget):
         total_typed_chars = sum(len(w) for w in self.typed_words)
         minutes = self.elapsed / (1000 * 60)
         return round((total_typed_chars / 5) / minutes, 1) if minutes > 0 else 0.0
-
-
-
-
-
-
