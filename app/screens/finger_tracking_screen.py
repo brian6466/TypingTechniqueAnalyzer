@@ -88,7 +88,7 @@ class FingerTrackingScreen(QWidget):
                 dist = math.hypot(fx - key_center[0], fy - key_center[1])
                 if dist < min_distance:
                     min_distance = dist
-                    closest_finger = f"{hand_label} {name}"
+                    closest_finger = "Thumb" if name == "Thumb" else f"{hand_label} {name}"
 
         return closest_finger
 
@@ -111,7 +111,7 @@ class FingerTrackingScreen(QWidget):
                 finger_nodes = set()
 
                 for finger_name, indices in self.FINGER_LANDMARKS.items():
-                    finger_label = f"{hand_label} {finger_name}"
+                    finger_label = "Thumb" if finger_name == "Thumb" else f"{hand_label} {finger_name}"
                     color = get_finger_color(finger_label)
 
                     for idx in indices:

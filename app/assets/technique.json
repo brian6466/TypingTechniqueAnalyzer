@@ -6,7 +6,7 @@
     "H": "Right Index", "J": "Right Index", "K": "Right Middle", "L": "Right Ring",
     "N": "Right Index", "M": "Right Index",
 
-    " ": ["Thumnb"], "Left Shift": "Left Pinky", "Right Shift": "Right Pinky",
+    " ": ["Thumb"], "Left Shift": "Left Pinky", "Right Shift": "Right Pinky",
 
     "1": "Left Ring", "2": "Left Ring", "3": "Left Middle", "4": "Left Middle", "5": "",
     "6": "", "7": "", "8": "", "9": "Right Ring", "0": "Right Ring"

@@ -20,7 +20,6 @@ class ResultScreen(QWidget):
         layout.setContentsMargins(50, 50, 50, 50)
         self.setLayout(layout)
 
-        # Metrics layout
         metrics_layout = QHBoxLayout()
         metrics_layout.setSpacing(80)
         layout.addLayout(metrics_layout)

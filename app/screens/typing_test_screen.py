@@ -106,6 +106,9 @@ class TypingTestScreen(QWidget):
                     self.current_word_index -= 1
 
         elif event.key() == Qt.Key_Space:
+            if not self.typed_words[self.current_word_index]:
+                return
+
             self.total_keystrokes += 1
             self.finished_words[self.current_word_index] = True
             if self.current_word_index == len(self.words) - 1:
