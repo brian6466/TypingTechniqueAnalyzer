@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.confirm_screen)     
         self.stack.addWidget(self.key_mapper_screen)
 
-        if config_exists("keys"):
+        if config_exists("keys") or config_exists("keymap"):
             self.confirm_screen.start_camera_with_overlay()
             self.stack.setCurrentIndex(0)
         else:
